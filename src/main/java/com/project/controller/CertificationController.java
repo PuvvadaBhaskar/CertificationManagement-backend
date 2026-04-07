@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/certifications")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173") 
 public class CertificationController {
 
     private final CertificationService certificationService;
@@ -33,9 +34,6 @@ public class CertificationController {
             @RequestParam(value = "file", required = false) MultipartFile file
     ) throws IOException {
 
-        // ✅ DEBUG
-        System.out.println("FILE IN CONTROLLER: " + file);
-
         CertificationRequestDto dto = new CertificationRequestDto();
         dto.setTitle(title);
         dto.setOrganization(organization);
@@ -50,9 +48,29 @@ public class CertificationController {
 
         return certificationService.addCertificationWithFile(dto, userId, file);
     }
+
     @GetMapping("/user/{userId}")
     public List<CertificationResponseDto> getByUser(@PathVariable Long userId) {
         return certificationService.getByUser(userId);
+    }
+
+    @GetMapping
+    public ApiResponse<Page<CertificationResponseDto>> getAllCertifications(
+
+            @RequestParam(required = false) Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status
+    ) {
+
+        Page<CertificationResponseDto> result =
+                certificationService.getAllCertifications(
+                        userId, page, size, sortBy, search, status
+                );
+
+        return new ApiResponse<>(true, result, "Fetched successfully");
     }
 
     @PutMapping("/{id}")
@@ -75,24 +93,5 @@ public class CertificationController {
             @RequestParam String newDate) {
 
         return certificationService.renewCertification(id, LocalDate.parse(newDate));
-    }
-
-    @GetMapping
-    public ApiResponse<Page<CertificationResponseDto>> getAllCertifications(
-
-            @RequestParam Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String status
-    ) {
-
-        Page<CertificationResponseDto> result =
-                certificationService.getAllCertifications(
-                        userId, page, size, sortBy, search, status
-                );
-
-        return new ApiResponse<>(true, result, "Fetched successfully");
     }
 }

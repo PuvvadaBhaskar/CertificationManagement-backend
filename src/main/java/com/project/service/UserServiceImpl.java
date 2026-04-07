@@ -88,13 +88,10 @@ public class UserServiceImpl implements UserService {
         }
 
         try {
-            // 🔥 VERY IMPORTANT: delete notifications first
             notificationRepository.deleteByUserId(id);
 
-            // (optional if exists)
-            certificationRepository.deleteByUserId(id);
+            certificationRepository.deleteById(id);
 
-            // ✅ now delete user
             userRepository.deleteById(id);
             refreshTokenRepository.deleteById(id);
 

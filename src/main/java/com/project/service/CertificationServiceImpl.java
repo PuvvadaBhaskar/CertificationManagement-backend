@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,8 +28,6 @@ public class CertificationServiceImpl implements CertificationService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    private final String uploadDir = "uploads/";
-
     @Override
     public CertificationResponseDto addCertification(CertificationRequestDto dto) {
 
@@ -45,15 +43,6 @@ public class CertificationServiceImpl implements CertificationService {
         cert.setUser(user);
 
         Certification saved = certificationRepository.save(cert);
-
-        if (saved.getExpiryDate() != null &&
-                saved.getExpiryDate().isBefore(LocalDate.now().plusDays(7))) {
-
-            notificationService.createNotification(
-                    user.getId(),
-                    "Your certification '" + saved.getTitle() + "' is expiring soon!"
-            );
-        }
 
         return mapToDto(saved);
     }
@@ -77,28 +66,13 @@ public class CertificationServiceImpl implements CertificationService {
                 directory.mkdirs();
             }
 
-            // ✅ FIX: handle null file safely
             if (file != null && !file.isEmpty()) {
-
-                String originalName = file.getOriginalFilename();
-
-                if (originalName == null) {
-                    throw new RuntimeException("File name is null");
-                }
-
-                String fileName = UUID.randomUUID() + "_" + originalName;
+                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
                 filePath = uploadDir + fileName;
-
                 file.transferTo(new File(filePath));
-
-                System.out.println("File saved at: " + filePath);
-
-            } else {
-                System.out.println("⚠ No file uploaded");
             }
 
         } catch (IOException e) {
-            e.printStackTrace(); // 🔥 VERY IMPORTANT
             throw new RuntimeException("File upload failed: " + e.getMessage());
         }
 
@@ -113,22 +87,12 @@ public class CertificationServiceImpl implements CertificationService {
 
         Certification saved = certificationRepository.save(cert);
 
-        if (saved.getExpiryDate() != null &&
-                saved.getExpiryDate().isBefore(LocalDate.now().plusDays(7))) {
-
-            notificationService.createNotification(
-                    user.getId(),
-                    "Your certification '" + saved.getTitle() + "' is expiring soon!"
-            );
-        }
-
         return mapToDto(saved);
     }
 
     @Override
     public List<CertificationResponseDto> getByUser(Long userId) {
-
-        return certificationRepository.findByUserId(userId)
+        return certificationRepository.findByUser_Id(userId)
                 .stream()
                 .map(this::mapToDto)
                 .toList();
@@ -146,18 +110,7 @@ public class CertificationServiceImpl implements CertificationService {
         cert.setExpiryDate(dto.getExpiryDate());
         cert.setStatus(dto.getStatus());
 
-        Certification updated = certificationRepository.save(cert);
-
-        if (updated.getExpiryDate() != null &&
-                updated.getExpiryDate().isBefore(LocalDate.now().plusDays(7))) {
-
-            notificationService.createNotification(
-                    updated.getUser().getId(),
-                    "Your certification '" + updated.getTitle() + "' is expiring soon!"
-            );
-        }
-
-        return mapToDto(updated);
+        return mapToDto(certificationRepository.save(cert));
     }
 
     @Override
@@ -179,18 +132,33 @@ public class CertificationServiceImpl implements CertificationService {
         cert.setExpiryDate(newExpiry);
         cert.setStatus("ACTIVE");
 
-        Certification updated = certificationRepository.save(cert);
+        return mapToDto(certificationRepository.save(cert));
+    }
 
-        notificationService.createNotification(
-                cert.getUser().getId(),
-                "Your certification '" + cert.getTitle() + "' has been renewed."
-        );
+    @Override
+    public Page<CertificationResponseDto> getAllCertifications(
+            Long userId,
+            int page,
+            int size,
+            String sortBy,
+            String search,
+            String status
+    ) {
 
-        return mapToDto(updated);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
+
+        Page<Certification> certPage;
+
+        if (userId != null) {
+            certPage = certificationRepository.findByUser_Id(userId, pageable);
+        } else {
+            certPage = certificationRepository.findAll(pageable);
+        }
+
+        return certPage.map(this::mapToDto);
     }
 
     private CertificationResponseDto mapToDto(Certification cert) {
-
         return new CertificationResponseDto(
                 cert.getId(),
                 cert.getTitle(),
@@ -203,10 +171,7 @@ public class CertificationServiceImpl implements CertificationService {
                 cert.getFilePath()
         );
     }
-
-    @Override
-    public Page<CertificationResponseDto> getAllCertifications(Long userId, int page, int size, String sortBy,
-            String search, String status) {
-        return Page.empty();
+    public Page<Certification> getCertificationsByUser(Long userId, Pageable pageable) {
+        return certificationRepository.findByUser_Id(userId, pageable);
     }
 }

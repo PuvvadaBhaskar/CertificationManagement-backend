@@ -21,13 +21,13 @@ public class DashboardServiceImpl implements DashboardService {
         LocalDate today = LocalDate.now();
         LocalDate next7Days = today.plusDays(7);
 
-        long total = certificationRepository.countByUserId(userId);
+        long total = certificationRepository.countByUser_Id(userId);
 
         long expired = certificationRepository
-                .countByUserIdAndExpiryDateBefore(userId, today);
+                .countByUser_IdAndExpiryDateBefore(userId, today);
 
         long expiringSoon = certificationRepository
-                .countByUserIdAndExpiryDateBetween(userId, today, next7Days);
+                .countByUser_IdAndExpiryDateBetween(userId, today, next7Days);
 
         long active = total - expired;
 
