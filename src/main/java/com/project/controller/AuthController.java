@@ -35,4 +35,10 @@ public class AuthController {
     public String register(@RequestBody User user) {
         return authService.register(user);
     }
+    
+    @GetMapping("/home")
+    public String home()
+    {
+    	return "Home";
+    }
 }
