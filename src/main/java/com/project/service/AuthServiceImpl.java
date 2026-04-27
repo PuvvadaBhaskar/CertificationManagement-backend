@@ -39,17 +39,16 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken = jwtUtil.generateToken(user.getEmail());
 
-        // 🔥 FIXED REFRESH TOKEN LOGIC
         RefreshToken refreshToken = refreshTokenRepository.findByUser(user)
                 .map(existingToken -> {
-                    existingToken.setUser(user); // ✅ VERY IMPORTANT FIX
+                    existingToken.setUser(user); 
                     existingToken.setToken(UUID.randomUUID().toString());
                     existingToken.setExpiryDate(LocalDateTime.now().plusDays(7));
                     return existingToken;
                 })
                 .orElseGet(() -> {
                     RefreshToken newToken = new RefreshToken();
-                    newToken.setUser(user); // ✅ IMPORTANT
+                    newToken.setUser(user);
                     newToken.setToken(UUID.randomUUID().toString());
                     newToken.setExpiryDate(LocalDateTime.now().plusDays(7));
                     return newToken;
@@ -62,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
                 "refreshToken", refreshToken.getToken(),
                 "userId", user.getId(),
                 "role", user.getRole(),
-                "name", user.getName() != null ? user.getName() : "User", // ✅ safe
+                "name", user.getName() != null ? user.getName() : "User", 
                 "email", user.getEmail()
         );
     }

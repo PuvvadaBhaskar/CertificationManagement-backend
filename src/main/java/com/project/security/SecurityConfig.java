@@ -25,11 +25,16 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(cors -> {}) // ✅ enable CORS
+            .cors(cors -> {}) 
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers( "/v3/api-docs/**",    // JSON/YAML documentation
+                            "/swagger-ui/**",      // Swagger UI resources
+                            "/swagger-ui.html",  // Legacy Swagger UI entry point
+                            "/webjars/**"
+                            ).permitAll()
                     .requestMatchers("/api/notifications/**").permitAll()
                     .requestMatchers("/api/certifications/**").permitAll() 
                     .requestMatchers("/api/files/**").authenticated()
@@ -41,19 +46,16 @@ public class SecurityConfig {
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(form -> form.disable())
 
-            // ⚠️ IMPORTANT: keep JWT filter but it won’t block permitted APIs
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 

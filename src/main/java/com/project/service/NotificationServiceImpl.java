@@ -31,7 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserRepository userRepository;
     private final EmailService emailService;
 
-    // 🔁 WRAPPER → uses core method
+    //WRAPPER → uses core method
     @Override
     public void createNotification(Long userId, String message) {
 
@@ -40,10 +40,9 @@ public class NotificationServiceImpl implements NotificationService {
         dto.setMessage(message);
         dto.setChannel("IN_APP");
 
-        sendNotification(dto); // ✅ reuse core logic
+        sendNotification(dto); //  reuseed core logic
     }
 
-    // 🔁 WRAPPER → uses core method
     @Override
     public void sendEmailToUser(Long userId, String subject, String message) {
 
@@ -53,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
         dto.setMessage(message);
         dto.setChannel("EMAIL");
 
-        sendNotification(dto); // ✅ reuse core logic
+        sendNotification(dto); // reused core logic
     }
 
  
@@ -95,19 +94,17 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.deleteById(id);
     }
 
-    // ❌ keep as-is (separate service later if needed)
     public CertificationResponseDto addCertification(CertificationRequestDto dto) {
         return null;
     }
+    // core method
 
-    // 🔥 CORE METHOD (ALL LOGIC HERE)
     @Override
     public Map<String, Object> sendNotification(NotificationRequestDto dto) {
 
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // ✅ Resolve channel safely
         DeliveryChannel channel;
         try {
             channel = dto.getChannel() == null
@@ -117,12 +114,10 @@ public class NotificationServiceImpl implements NotificationService {
             throw new RuntimeException("Invalid channel type");
         }
 
-        // ✅ Build final message
         String finalMessage = (dto.getTitle() != null && !dto.getTitle().isEmpty())
                 ? dto.getTitle() + ": " + dto.getMessage()
                 : dto.getMessage();
 
-        // ✅ Save notification
         Notification notification = Notification.builder()
                 .user(user)
                 .title(dto.getTitle())
@@ -137,7 +132,6 @@ public class NotificationServiceImpl implements NotificationService {
 
         boolean emailSent = false;
 
-        // ✅ Clean email logic
         if (channel == DeliveryChannel.EMAIL) {
             try {
                 String body = "Hello " + user.getName() + ",\n\n" +
@@ -171,7 +165,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         for (Long userId : dto.getUserIds()) {
 
-            if (userId == null) continue; // ✅ extra safety
+            if (userId == null) continue; // extra safety condition used
 
             NotificationRequestDto singleDto = new NotificationRequestDto();
             singleDto.setUserId(userId);
@@ -180,7 +174,7 @@ public class NotificationServiceImpl implements NotificationService {
             singleDto.setChannel(dto.getChannel());
             singleDto.setSenderId(dto.getSenderId());
 
-            sendNotification(singleDto); // 🔥 reuse logic
+            sendNotification(singleDto); 
             successCount++;
         }
 

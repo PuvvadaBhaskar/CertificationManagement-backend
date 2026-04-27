@@ -17,14 +17,14 @@ public class EmailService {
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("mr.bhaskar090@gmail.com");  // ✅ IMPORTANT
+            message.setFrom("mr.bhaskar090@gmail.com");  
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
 
             mailSender.send(message);
 
-            System.out.println("✅ Mail sent to: " + to);
+            System.out.println(" Mail sent to: " + to);
 
         } catch (Exception e) {
             System.out.println("❌ Mail failed");

@@ -11,7 +11,6 @@ import com.project.dto.NotificationResponseDto;
 
 public interface NotificationService {
 
-    // Core API (used by frontend)
     Map<String, Object> sendNotification(NotificationRequestDto dto);
 
     // Wrapper methods (optional usage)

@@ -21,14 +21,12 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    // ✅ GET USER NOTIFICATIONS
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<NotificationResponseDto>> getUserNotifications(@PathVariable Long userId) {
 
         return ResponseEntity.ok(notificationService.getUserNotifications(userId));
     }
 
-    // ✅ MARK AS READ
     @PutMapping("/{id}/read")
     public ResponseEntity<String> markAsRead(@PathVariable Long id) {
 
@@ -36,7 +34,6 @@ public class NotificationController {
         return ResponseEntity.ok("Marked as read");
     }
 
-    // ✅ DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
 
@@ -44,7 +41,6 @@ public class NotificationController {
         return ResponseEntity.ok("Deleted successfully");
     }
 
-    // 🔥 MAIN API (MOST IMPORTANT)
     @PostMapping
     public ResponseEntity<Map<String, Object>> sendNotification(@RequestBody NotificationRequestDto dto) {
 

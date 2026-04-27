@@ -23,6 +23,6 @@ public class RefreshToken {
     private LocalDateTime expiryDate;
 
     @OneToOne
-    @JoinColumn(name = "user_id")  // ✅ ADD THIS
+    @JoinColumn(name = "user_id")  
     private User user;
 }
