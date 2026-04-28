@@ -25,45 +25,68 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(cors -> {}) 
+            // ✅ Enable CORS with custom configuration
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+            // ✅ Disable CSRF (required for APIs)
             .csrf(csrf -> csrf.disable())
 
+            // ✅ Authorization rules
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers( "/v3/api-docs/**",    // JSON/YAML documentation
-                            "/swagger-ui/**",      // Swagger UI resources
-                            "/swagger-ui.html",  // Legacy Swagger UI entry point
+
+                    // Swagger access
+                    .requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
                             "/webjars/**"
-                            ).permitAll()
+                    ).permitAll()
+
+                    // Public APIs
                     .requestMatchers("/api/notifications/**").permitAll()
-                    .requestMatchers("/api/certifications/**").permitAll() 
+                    .requestMatchers("/api/certifications/**").permitAll()
+
+                    // Protected APIs
                     .requestMatchers("/api/files/**").authenticated()
-                    .requestMatchers("/api/users").hasRole("ADMIN")
                     .requestMatchers("/api/users/**").hasRole("ADMIN")
+
+                    // Everything else
                     .anyRequest().authenticated()
             )
 
+            // Disable default login
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(form -> form.disable())
 
+            // JWT filter
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // ✅ Password encoder (used in AuthService)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ✅ CORS Configuration (THIS FIXES YOUR ERROR)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // 🔥 Allow all origins (fixes "Failed to fetch" / CORS errors)
+        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
         configuration.setAllowedHeaders(List.of("*"));
+
+        // Required for sending Authorization headers (JWT)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
